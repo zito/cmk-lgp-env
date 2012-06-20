@@ -1,0 +1,66 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# vim:sta:si:sw=4:sts=4:et:
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# The Check_MK official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Check has been developed using a Emerson Network Power
+# Manufacturer			Liebert Corporation
+# Device Model			Liebert HIMOD
+# Device Firmware Version	PAL 1.04.029.STD
+# Agent Type			IntelliSlot Web Card
+# Agent App Firmware Version	3.210.0
+# Agent App Firmware Label	IS-WEBLBDS_HID7_3.210.0_046175
+# Agent Boot Firmware Version	3.210.0
+# Agent Boot Firmware Label	IS-WEBLBDS_HID7_3.210.0_046175
+# Agent Hardware ID		7
+#
+# +------------------------------------------------------------------+
+# | This file has been contributed by:                               |
+# |                                                                  |
+# | Václav Ovsík <vaclav.ovsik@gmail.com>             Copyright 2012 |
+# +------------------------------------------------------------------+
+
+# Example info:
+#  [['23', '60']]
+
+def inventory_lgp_env_temp_set(info):
+    if len(info) != 1 or len(info[0]) != 2:
+        return
+    return [(None, None)]
+
+def check_lgp_env_temp_set(item, params, info):
+    (setting, tolerance), = info
+    return (0, 'OK - Temperature Setting: %s°C ±%.1f'
+            % (setting, float(tolerance)/10/2))
+
+check_info['lgp_env_temp_set'] = (check_lgp_env_temp_set,
+        'Temp  Setting', 0, inventory_lgp_env_temp_set)
+
+snmp_info['lgp_env_temp_set'] = ('.1.3.6.1.4.1.476.1.42.3.4.1.3', [
+	'1.0', # LIEBERT-GP-ENVIRONMENTAL-MIB::lgpEnvTemperatureSettingDegC.0
+	'2.0', # LIEBERT-GP-ENVIRONMENTAL-MIB::lgpEnvTemperatureToleranceDegC.0
+    ])
+
+snmp_scan_functions['lgp_env_temp_set'] = lambda oid: \
+        oid('.1.3.6.1.2.1.1.2.0').startswith('.1.3.6.1.4.1.476.1.42')
