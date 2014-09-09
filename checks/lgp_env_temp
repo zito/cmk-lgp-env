@@ -25,15 +25,15 @@
 # Boston, MA 02110-1301 USA.
 
 # Check has been developed using a Emerson Network Power
-# Manufacturer			Liebert Corporation
-# Device Model			Liebert HIMOD
-# Device Firmware Version	PAL 1.04.029.STD
-# Agent Type			IntelliSlot Web Card
-# Agent App Firmware Version	3.210.0
-# Agent App Firmware Label	IS-WEBLBDS_HID7_3.210.0_046175
-# Agent Boot Firmware Version	3.210.0
-# Agent Boot Firmware Label	IS-WEBLBDS_HID7_3.210.0_046175
-# Agent Hardware ID		7
+# Manufacturer                  Liebert Corporation
+# Device Model                  Liebert HIMOD
+# Device Firmware Version       PAL 1.04.029.STD
+# Agent Type                    IntelliSlot Web Card
+# Agent App Firmware Version    3.210.0
+# Agent App Firmware Label      IS-WEBLBDS_HID7_3.210.0_046175
+# Agent Boot Firmware Version   3.210.0
+# Agent Boot Firmware Label     IS-WEBLBDS_HID7_3.210.0_046175
+# Agent Hardware ID             7
 #
 # +------------------------------------------------------------------+
 # | This file has been contributed by:                               |
@@ -42,13 +42,13 @@
 # +------------------------------------------------------------------+
 
 # Example info:
-#  [['1', '.1.3.6.1.4.1.476.1.42.3.4.1.1.1', '23'],
-#   ['2', '.1.3.6.1.4.1.476.1.42.3.4.1.1.3', '21'],
-#   ['3', '.1.3.6.1.4.1.476.1.42.3.4.1.1.2', '23']]
+#  [['1', '.1.3.6.1.4.1.476.1.42.3.4.1.1.1', '23', ''],
+#   ['2', '.1.3.6.1.4.1.476.1.42.3.4.1.1.3', '21', ''],
+#   ['3', '.1.3.6.1.4.1.476.1.42.3.4.1.1.2', '23', '']]
 
 
 lgp_env_temp_oid2desc = {
-    '.1.3.6.1.4.1.476.1.42.3.4.1.1.1': 'Control',	    # LIEBERT-GP-ENVIRONMENTAL-MIB::lgpEnvControlTemperature
+    '.1.3.6.1.4.1.476.1.42.3.4.1.1.1': 'Control',           # LIEBERT-GP-ENVIRONMENTAL-MIB::lgpEnvControlTemperature
     '.1.3.6.1.4.1.476.1.42.3.4.1.1.3': 'Supply Air',    # LIEBERT-GP-ENVIRONMENTAL-MIB::lgpEnvSupplyAirTemperature
     '.1.3.6.1.4.1.476.1.42.3.4.1.1.2': 'Return Air',    # LIEBERT-GP-ENVIRONMENTAL-MIB::lgpEnvReturnAirTemperature
 }
@@ -61,7 +61,8 @@ def inventory_lgp_env_temp(info):
         return
     inv = []
     for t in info:
-        if t[1] in lgp_env_temp_oid2desc:
+        if t[1] in lgp_env_temp_oid2desc and \
+                ( t[2] != '' or t[3] != '' ):
             inv.append((lgp_env_temp_oid2desc[t[1]], {}))
     return inv
 
@@ -72,7 +73,11 @@ def check_lgp_env_temp(item, params, info):
     name = 'temp_' + item.lower().replace(' ', '_')
     for t in info:
         if t[1] == oid:
-            return check_lgp_env_chk_levels_final(name, saveint(t[2]), params)
+            if t[3] != '':
+                value = saveint(t[3]) / 10.0
+            else:
+                value = saveint(t[2])
+            return check_lgp_env_chk_levels_final(name, value, params)
 
 
 check_info['lgp_env_temp'] = (check_lgp_env_temp,
@@ -81,9 +86,10 @@ check_includes['lgp_env_temp'] = [ 'lgp_env.include' ]
 check_default_levels['lgp_env_temp'] = 'lgp_env_default_levels'
 
 snmp_info['lgp_env_temp'] = ('.1.3.6.1.4.1.476.1.42.3.4.1.3.3.1', [
-	'1', # LIEBERT-GP-ENVIRONMENTAL-MIB::lgpEnvTemperatureIdDegC
-	'2', # LIEBERT-GP-ENVIRONMENTAL-MIB::lgpEnvTemperatureDescrDegC
-	'3', # LIEBERT-GP-ENVIRONMENTAL-MIB::lgpEnvTemperatureMeasurementDegC
+        '1', # LIEBERT-GP-ENVIRONMENTAL-MIB::lgpEnvTemperatureIdDegC
+        '2', # LIEBERT-GP-ENVIRONMENTAL-MIB::lgpEnvTemperatureDescrDegC
+        '3', # LIEBERT-GP-ENVIRONMENTAL-MIB::lgpEnvTemperatureMeasurementDegC
+        '50',# LIEBERT-GP-ENVIRONMENTAL-MIB::lgpEnvTemperatureMeasurementTenthsDegC
     ])
 
 snmp_scan_functions['lgp_env_temp'] = lambda oid: \

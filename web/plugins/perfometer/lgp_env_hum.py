@@ -43,12 +43,12 @@
 
 def perfometer_check_mk_lgp_env_hum(row, check_command, perf_data):
     info = row["service_plugin_output"]
-    hum = int(perf_data[0][1])
+    hum = float(perf_data[0][1])
     color = '#00ff00'
     if info.startswith('WARN'):
         color = '#ffff00'
     if info.startswith('CRIT'):
         color = '#ff0000'
-    return (str(hum) + '%'), perfometer_linear(hum, color)
+    return ('%.1f%%' % (hum)), perfometer_linear(hum, color)
 
 perfometers['check_mk-lgp_env_hum'] = perfometer_check_mk_lgp_env_hum

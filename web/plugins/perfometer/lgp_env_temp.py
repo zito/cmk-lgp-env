@@ -43,12 +43,12 @@
 
 def perfometer_check_mk_lgp_env_temp(row, check_command, perf_data):
     info = row["service_plugin_output"]
-    temp = int(perf_data[0][1])
+    temp = float(perf_data[0][1])
     color = '#00ff00'
     if info.startswith('WARN'):
         color = '#ffff00'
     if info.startswith('CRIT'):
         color = '#ff0000'
-    return (str(temp) + '°C'), perfometer_logarithmic(temp, 21, 1.2, color)
+    return ('%.1f°C' % (temp)), perfometer_logarithmic(temp, 21, 1.2, color)
 
 perfometers['check_mk-lgp_env_temp'] = perfometer_check_mk_lgp_env_temp

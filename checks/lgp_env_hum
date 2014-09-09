@@ -42,13 +42,15 @@
 # +------------------------------------------------------------------+
 
 # Example info:
-#  [['1', '.1.3.6.1.4.1.476.1.42.3.4.2.1.1', '40'],
-#   ['2', '.1.3.6.1.4.1.476.1.42.3.4.2.1.2', '40']]
+#  [['1', '.1.3.6.1.4.1.476.1.42.3.4.2.1.1', '40', ''],
+#   ['2', '.1.3.6.1.4.1.476.1.42.3.4.2.1.2', '40', '']]
+
 
 
 lgp_env_hum_oid2desc = {
     '.1.3.6.1.4.1.476.1.42.3.4.2.1.1':  'Control',      # LIEBERT-GP-ENVIRONMENTAL-MIB::lgpEnvControlHumidity
     '.1.3.6.1.4.1.476.1.42.3.4.2.1.2':  'Return Air',   # LIEBERT-GP-ENVIRONMENTAL-MIB::lgpEnvReturnAirHumidity
+    '.1.3.6.1.4.1.476.1.42.3.4.2.1.3':  'Supply Air',   # LIEBERT-GP-ENVIRONMENTAL-MIB::lgpEnvSupplyAirHumidity
 }
 
 lgp_env_hum_desc2oid = dict(map(reversed, lgp_env_hum_oid2desc.items()))
@@ -59,7 +61,8 @@ def inventory_lgp_env_hum(info):
         return
     inv = []
     for h in info:
-        if h[1] in lgp_env_hum_oid2desc:
+        if h[1] in lgp_env_hum_oid2desc and \
+                ( h[2] != '' or h[3] != '' ):
             inv.append((lgp_env_hum_oid2desc[h[1]], {}))
     return inv
 
@@ -70,7 +73,11 @@ def check_lgp_env_hum(item, params, info):
     name = 'humidity_' + item.lower().replace(' ', '_')
     for h in info:
         if h[1] == oid:
-            return check_lgp_env_chk_levels_final(name, saveint(h[2]), params)
+            if h[3] != '':
+                value = saveint(h[3]) / 10.0
+            else:
+                value = saveint(h[2])
+            return check_lgp_env_chk_levels_final(name, value, params)
 
 
 check_info['lgp_env_hum'] = (check_lgp_env_hum,
@@ -82,6 +89,7 @@ snmp_info['lgp_env_hum'] = ('.1.3.6.1.4.1.476.1.42.3.4.2.2.3.1', [
         '1', # LIEBERT-GP-ENVIRONMENTAL-MIB::lgpEnvHumidityIdRel
         '2', # LIEBERT-GP-ENVIRONMENTAL-MIB::lgpEnvHumidityDescrRel
         '3', # LIEBERT-GP-ENVIRONMENTAL-MIB::lgpEnvHumidityMeasurementRel
+        '50',# LIEBERT-GP-ENVIRONMENTAL-MIB::lgpEnvHumidityMeasurementRelTenths
     ])
 
 snmp_scan_functions['lgp_env_hum'] = lambda oid: \

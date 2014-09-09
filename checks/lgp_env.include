@@ -41,7 +41,7 @@ def check_lgp_env_levels(key, value, params):
     unit = get_my_param('unit') or perfunit or ''
     if unit == '%':
         unit = '%%'
-    info = get_my_param('info') or ('%s: %%d%s' % (label, unit))
+    info = get_my_param('info') or ('%s: %%.1f%s' % (label, unit))
     status = 0
     txt = info % value
     level = dict.fromkeys(('lc', 'lw', 'hw', 'hc'))
