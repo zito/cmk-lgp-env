@@ -120,6 +120,9 @@ factory_settings["lgp_env_default_levels"] = {
         'humidity_return_air_label'     : 'Return air humidity',
         'humidity_return_air_perfunit'  : '%',
 
+        'humidity_supply_air_label'     : 'Supply air humidity',
+        'humidity_supply_air_perfunit'  : '%',
+
 #
 #       lgp_env_temp
 #
