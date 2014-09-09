@@ -59,7 +59,7 @@ class fake_file:
 #-----------------------------------------------------------------------
 
 pacname = 'cmk-lgp-env'
-version = '1.2'
+version = '1.3'
 
 filelists = {}
 package = {
