@@ -62,7 +62,7 @@ def inventory_lgp_env_hum(info):
     inv = []
     for h in info:
         if h[1] in lgp_env_hum_oid2desc and \
-                ( h[2] != '' or h[3] != '' ):
+                ( h[2] != '' or saveint(h[3]) < 1000 ):
             inv.append((lgp_env_hum_oid2desc[h[1]], {}))
     return inv
 
