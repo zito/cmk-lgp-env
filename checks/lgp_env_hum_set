@@ -51,7 +51,7 @@ def inventory_lgp_env_hum_set(info):
 
 def check_lgp_env_hum_set(item, params, info):
     (setting, tolerance), = info
-    return (0, 'OK - Humidity Setting: %s%% ±%.1f'
+    return (0, u'OK - Humidity Setting: %s%% ±%.1f'
             % (setting, float(tolerance)/2))
 
 check_info['lgp_env_hum_set'] = (check_lgp_env_hum_set,

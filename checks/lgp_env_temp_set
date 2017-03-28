@@ -51,7 +51,7 @@ def inventory_lgp_env_temp_set(info):
 
 def check_lgp_env_temp_set(item, params, info):
     (setting, tolerance), = info
-    return (0, 'OK - Temperature Setting: %s°C ±%.1f'
+    return (0, u'OK - Temperature Setting: %s°C ±%.1f'
             % (setting, float(tolerance)/10/2))
 
 check_info['lgp_env_temp_set'] = (check_lgp_env_temp_set,
