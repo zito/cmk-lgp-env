@@ -46,7 +46,7 @@
 
 
 def inventory_lgp_env_state(info):
-    if len(info) != 1:
+    if len(info) != 1 or len(info[0]) != 1:
         return
     ((state,),) = info
     sys, cool, humid, dehumid, fan, genrl_alarm, aud_alarm = state
