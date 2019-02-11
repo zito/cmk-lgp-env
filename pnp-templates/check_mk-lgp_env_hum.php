@@ -10,7 +10,7 @@ $_WARNRULE = '#FFFF00';
 $_CRITRULE = '#FF0000';
 
 $ds_name[1] = "Temperature";
-$opt[1] = "--vertical-label '%' --title \"$hostname / $servicedesc\" --upper 101 --lower 0 ";
+$opt[1] = "--vertical-label '%' --title \"$hostname / $servicedesc\" --upper-limit 101 --lower-limit 0 ";
 $def[1] = rrd::def("hum", $RRDFILE[1], $DS[1], "AVERAGE");
 $def[1] .= rrd::line1("hum", "#050", "humidity");
 $def[1] .= rrd::gprint("hum", array("LAST", "MIN", "MAX", "AVERAGE"), "%3.0lf%%");
