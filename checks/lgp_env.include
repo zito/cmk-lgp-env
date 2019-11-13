@@ -127,12 +127,12 @@ factory_settings["lgp_env_default_levels"] = {
 #       lgp_env_temp
 #
         'temp_control_label'        : 'Control temperature',
-        'temp_control_unit'         : '°C',
+        'temp_control_unit'         : u'°C',
         'temp_control_levels'       : ( 14, 16, 26, 28 ),
 
         'temp_return_air_label'     : 'Return air temperature',
-        'temp_return_air_unit'      : '°C',
+        'temp_return_air_unit'      : u'°C',
 
         'temp_supply_air_label'     : 'Supply air temperature',
-        'temp_supply_air_unit'      : '°C',
+        'temp_supply_air_unit'      : u'°C',
 }

@@ -49,6 +49,6 @@ def perfometer_check_mk_lgp_env_temp(row, check_command, perf_data):
         color = '#ffff00'
     if info.startswith('CRIT'):
         color = '#ff0000'
-    return ('%.1f°C' % (temp)), perfometer_logarithmic(temp, 21, 1.2, color)
+    return (u'%.1f°C' % (temp)), perfometer_logarithmic(temp, 21, 1.2, color)
 
 perfometers['check_mk-lgp_env_temp'] = perfometer_check_mk_lgp_env_temp
