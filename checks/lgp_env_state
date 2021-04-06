@@ -51,19 +51,19 @@ def inventory_lgp_env_state(info):
     ((state,),) = info
     sys, cool, humid, dehumid, fan, genrl_alarm, aud_alarm = state
     inv = []
-    if sys <> '':
+    if sys != '':
         inv.append(('System', None))
-    if cool <> '':
+    if cool != '':
         inv.append(('Cooling', None))
-    if humid <> '':
+    if humid != '':
         inv.append(('Humidifying', None))
-    if dehumid <> '':
+    if dehumid != '':
         inv.append(('Dehumidifying', None))
-    if fan <> '':
+    if fan != '':
         inv.append(('Fan', None))
-    if genrl_alarm <> '':
+    if genrl_alarm != '':
         inv.append(('General Alarm', None))
-    if aud_alarm <> '':
+    if aud_alarm != '':
         inv.append(('Audible Alarm', None))
     return inv
 
