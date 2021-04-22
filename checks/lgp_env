@@ -1,0 +1,238 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# vim:sta:si:sw=4:sts=4:et:
+#
+# Check has been developed using a Emerson Network Power
+# Manufacturer			Liebert Corporation
+# Device Model			Liebert HIMOD
+# Device Firmware Version	PAL 1.04.029.STD
+# Agent Type			IntelliSlot Web Card
+# Agent App Firmware Version	3.210.0
+# Agent App Firmware Label	IS-WEBLBDS_HID7_3.210.0_046175
+# Agent Boot Firmware Version	3.210.0
+# Agent Boot Firmware Label	IS-WEBLBDS_HID7_3.210.0_046175
+# Agent Hardware ID		7
+#
+# Václav Ovsík <vaclav.ovsik@gmail.com>
+#
+
+
+def _lgp_env_item2key(item):
+    return item.replace(' ', '')
+
+def parse_lgp_env(info):
+
+    stateInfo, tempSet, tempMeas, humSet, humMeas = info
+
+    parsed = {}
+
+    if stateInfo:
+        sys, cool, humid, dehumid, fan, genrl_alarm, aud_alarm = stateInfo[0]
+        s_state_sys = { '1':'On', '2':'Off', '3':'Standby' }
+        s_state_com = { '1':'On', '2':'Off' }
+        parsed['StateSystem'] = s_state_sys[sys]
+        parsed['StateCooling'] = s_state_com[cool]
+        parsed['StateHumidifying'] = s_state_com[humid]
+        parsed['StateDehumidifying'] = s_state_com[dehumid]
+        parsed['StateFan'] = s_state_com[fan]
+        parsed['StateGeneralAlarm'] = s_state_com[genrl_alarm]
+        parsed['StateAudibleAlarm'] = s_state_com[aud_alarm]
+
+    if tempSet:
+        setting, tolerance = tempSet[0]
+        parsed['TemperatureSetting'] = float(setting)
+        parsed['TemperatureTolerance'] = float(tolerance)/10/2
+
+    if tempMeas:
+        lgp_env_temp_oid2desc = {
+            '.1.3.6.1.4.1.476.1.42.3.4.1.1.1': 'TemperatureControl',
+            '.1.3.6.1.4.1.476.1.42.3.4.1.1.3': 'TemperatureSupplyAir',
+            '.1.3.6.1.4.1.476.1.42.3.4.1.1.2': 'TemperatureReturnAir',
+        }
+        for oid, val, val_tenths in tempMeas:
+            val = float(val)
+            if val_tenths:
+                val += float(val_tenths) / 10
+            parsed[lgp_env_temp_oid2desc[oid]] = val
+
+    if humSet:
+        setting, tolerance = humSet[0]
+        parsed['HumiditySetting'] = float(setting)
+        parsed['HumidityTolerance'] = float(tolerance)/2
+
+    if humMeas:
+        lgp_env_hum_oid2desc = {
+            '.1.3.6.1.4.1.476.1.42.3.4.2.1.1':  'HumidityControl',
+            '.1.3.6.1.4.1.476.1.42.3.4.2.1.2':  'HumidityReturnAir',
+            '.1.3.6.1.4.1.476.1.42.3.4.2.1.3':  'HumiditySupplyAir',
+        }
+        for oid, val, val_tenths in humMeas:
+            val = float(val)
+            if val_tenths:
+                val += float(val_tenths) / 10
+            parsed[lgp_env_hum_oid2desc[oid]] = val
+
+    return parsed
+
+def discover_lgp_env(parsed):
+    if parsed['StateSystem']:
+        yield None, {}
+
+def check_lgp_env(item, params, parsed):
+    if 'StateSystem' in parsed:
+        yield 0, "System: " + parsed['StateSystem']
+    if 'StateCooling' in parsed:
+        yield 0, "Cooling: " + parsed['StateCooling']
+    if 'StateHumidifying' in parsed:
+        yield 0, "Humidifying: " + parsed['StateHumidifying']
+    if 'StateDehumidifying' in parsed:
+        yield 0, "Dehumidifying: " + parsed['StateDehumidifying']
+    if 'StateFan' in parsed:
+        yield 0, "Fan: " + parsed['StateFan']
+    if 'StateGeneralAlarm' in parsed:
+        al = parsed['StateGeneralAlarm'] 
+        yield 0 if al == "Off" else 2, "GeneralAlarm: " + al
+    if 'StateAudibleAlarm' in parsed:
+        al = parsed['StateAudibleAlarm'] 
+        yield 0 if al == "Off" else 2, "AudibleAlarm: " + al
+
+
+check_info['lgp_env'] = {
+    'check_function'          : check_lgp_env,
+    'inventory_function'      : discover_lgp_env,
+    'service_description'     : 'State',
+    'snmp_scan_function'      : lambda oid: oid('.1.3.6.1.2.1.1.2.0').startswith('.1.3.6.1.4.1.476.1.42'),
+                                            # LIEBERT-GP-REGISTRATION-MIB::liebertGlobalProducts
+    'parse_function'          : parse_lgp_env,
+    'snmp_info'               : \
+    [
+        ('.1.3.6.1.4.1.476.1.42.3.4.3', [
+            '1.0', # LIEBERT-GP-ENVIRONMENTAL-MIB::lgpEnvStateSystem.0
+            '2.0', # LIEBERT-GP-ENVIRONMENTAL-MIB::lgpEnvStateCooling.0
+            '4.0', # LIEBERT-GP-ENVIRONMENTAL-MIB::lgpEnvStateHumidifying.0
+            '5.0', # LIEBERT-GP-ENVIRONMENTAL-MIB::lgpEnvStateDehumidifying.0
+            '7.0', # LIEBERT-GP-ENVIRONMENTAL-MIB::lgpEnvStateFan.0
+            '8.0', # LIEBERT-GP-ENVIRONMENTAL-MIB::lgpEnvStateGeneralAlarmOutput.0
+            '11.0', # LIEBERT-GP-ENVIRONMENTAL-MIB::lgpEnvStateAudibleAlarm.0
+            ]),
+        ('.1.3.6.1.4.1.476.1.42.3.4.1.3', [
+            '1.0', # LIEBERT-GP-ENVIRONMENTAL-MIB::lgpEnvTemperatureSettingDegC.0
+            '2.0', # LIEBERT-GP-ENVIRONMENTAL-MIB::lgpEnvTemperatureToleranceDegC.0
+            ]),
+        ('.1.3.6.1.4.1.476.1.42.3.4.1.3.3.1', [
+            '2', # LIEBERT-GP-ENVIRONMENTAL-MIB::lgpEnvTemperatureDescrDegC
+            '3', # LIEBERT-GP-ENVIRONMENTAL-MIB::lgpEnvTemperatureMeasurementDegC
+            '50',# LIEBERT-GP-ENVIRONMENTAL-MIB::lgpEnvTemperatureMeasurementTenthsDegC
+            ]),
+        ('.1.3.6.1.4.1.476.1.42.3.4.2.2', [
+            '1.0', # LIEBERT-GP-ENVIRONMENTAL-MIB::lgpEnvHumiditySettingRel
+            '2.0', # LIEBERT-GP-ENVIRONMENTAL-MIB::lgpEnvHumidityToleranceRel
+            ]),
+        ('.1.3.6.1.4.1.476.1.42.3.4.2.2.3.1', [
+            '2', # LIEBERT-GP-ENVIRONMENTAL-MIB::lgpEnvHumidityDescrRel
+            '3', # LIEBERT-GP-ENVIRONMENTAL-MIB::lgpEnvHumidityMeasurementRel
+            '50',# LIEBERT-GP-ENVIRONMENTAL-MIB::lgpEnvHumidityMeasurementRelTenths
+            ]),
+     ],
+}
+
+#   .--temperature---------------------------------------------------------.
+#   |      _                                      _                        |
+#   |     | |_ ___ _ __ ___  _ __   ___ _ __ __ _| |_ _   _ _ __ ___       |
+#   |     | __/ _ \ '_ ` _ \| '_ \ / _ \ '__/ _` | __| | | | '__/ _ \      |
+#   |     | ||  __/ | | | | | |_) |  __/ | | (_| | |_| |_| | | |  __/      |
+#   |      \__\___|_| |_| |_| .__/ \___|_|  \__,_|\__|\__,_|_|  \___|      |
+#   |                       |_|                                            |
+#   '----------------------------------------------------------------------'
+
+def discover_lgp_env_temp_set(parsed):
+    if 'TemperatureSetting' in parsed:
+        yield None, {}
+
+def check_lgp_env_temp_set(item, params, parsed):
+    val = parsed['TemperatureSetting']
+    tol = parsed.get('TemperatureTolerance')
+    text = "%.0f" % val
+    if tol:
+        text += " ±%.1f" % tol
+    text += " °C"
+    yield 0, text
+
+check_info['lgp_env.temp_set'] = {
+    'check_function'            : check_lgp_env_temp_set,
+    'inventory_function'        : discover_lgp_env_temp_set,
+    'service_description'       : 'Temperature Setting',
+}
+
+
+def discover_lgp_env_temp(parsed):
+    for item in ('Temperature Control',
+            'Temperature Return Air',
+            'Temperature Supply Air'):
+        if _lgp_env_item2key(item) in parsed:
+            yield item, {}
+
+def check_lgp_env_temp(item, params, parsed):
+    k = _lgp_env_item2key(item)
+    if k in parsed:
+        yield check_temperature(parsed[k], params, "lgp_env_" +k)
+
+check_info['lgp_env.temp'] = {
+    'check_function'            : check_lgp_env_temp,
+    'inventory_function'        : discover_lgp_env_temp,
+    'service_description'       : '%s',
+    'has_perfdata'              : True,
+    'includes'                  : [ 'temperature.include' ],
+    'group'                     : 'temperature',
+}
+
+
+#   .--humidity------------------------------------------------------------.
+#   |              _                     _     _ _ _                       |
+#   |             | |__  _   _ _ __ ___ (_) __| (_) |_ _   _               |
+#   |             | '_ \| | | | '_ ` _ \| |/ _` | | __| | | |              |
+#   |             | | | | |_| | | | | | | | (_| | | |_| |_| |              |
+#   |             |_| |_|\__,_|_| |_| |_|_|\__,_|_|\__|\__, |              |
+#   |                                                  |___/               |
+#   '----------------------------------------------------------------------'
+
+def discover_lgp_env_hum_set(parsed):
+    if 'HumiditySetting' in parsed:
+        yield None, {}
+
+def check_lgp_env_hum_set(item, params, parsed):
+    val = parsed['HumiditySetting']
+    tol = parsed.get('HumidityTolerance')
+    text = "%.0f" % val
+    if tol:
+        text += " ±%.1f" % tol
+    text += "%"
+    yield 0, text
+
+check_info['lgp_env.hum_set'] = {
+    'check_function'            : check_lgp_env_hum_set,
+    'inventory_function'        : discover_lgp_env_hum_set,
+    'service_description'       : 'Humidity Setting',
+}
+
+
+def discover_lgp_env_hum(parsed):
+    for item in ('Humidity Control',
+            'Humidity Return Air',
+            'Humidity Supply Air'):
+        if _lgp_env_item2key(item) in parsed:
+            yield item, {}
+
+def check_lgp_env_hum(item, params, parsed):
+    k = _lgp_env_item2key(item)
+    if k in parsed:
+        yield check_humidity(parsed[k], params)
+
+check_info['lgp_env.hum'] = {
+    'check_function'            : check_lgp_env_hum,
+    'inventory_function'        : discover_lgp_env_hum,
+    'service_description'       : '%s',
+    'has_perfdata'              : True,
+    'includes'                  : [ 'humidity.include' ],
+    'group'                     : 'humidity',
+}
